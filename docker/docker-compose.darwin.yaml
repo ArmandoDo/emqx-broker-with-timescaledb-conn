@@ -1,0 +1,117 @@
+name: 'emqx-mqtt-stack'
+services:
+  ## MQTT Broker
+  emqx-broker:
+    image: ${REGISTRY_NAME}/${EMQX_CONTAINER_NAME}:${EMQX_CONTAINER_TAG}
+    container_name: ${EMQX_CONTAINER_NAME}
+    # Network
+    networks:
+      - emqx_network
+    # Ports
+    ports:
+      - "1883:1883"       # MQTT
+      - "8883:8883"       # MQTT over TLS
+      - "8083:8083"       # MQTT over WebSocket
+      - "18083:18083"     # Dashboard HTTP
+    # Volumes
+    volumes:
+      - emqx_data:/opt/emqx/data
+    # Environment variables
+    environment:
+      EMQX_CLUSTER__NAME: ${EMQX_CLUSTER__NAME}
+      EMQX_NODE__NAME: ${EMQX_NODE__NAME}
+      EMQX_NODE__COOKIE: ${EMQX_NODE__COOKIE}
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD__DEFAULT_PASSWORD}
+      EMQX_LOG__CONSOLE__LEVEL: ${EMQX_LOG__CONSOLE__LEVEL}
+    # Loggin settings
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "8m"
+        max-file: 4
+        compress: "true"
+    # Check status of service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18083/status"]
+      retries: 6
+      interval: 20s
+      timeout: 10s
+    # Dependencies
+    depends_on:
+      postgresql-broker:
+        condition: service_healthy
+    restart: always
+  ## Postgresql
+  postgresql-broker:
+    image: ${REGISTRY_NAME}/${POSTGRES_CONTAINER_NAME}:${POSTGRES_CONTAINER_TAG}
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    # Network
+    networks:
+      - emqx_network
+    # Ports
+    ports:
+      - "${PGPORT}:${PGPORT}"
+    # Volumes
+    volumes:
+      - ${POSTGRES_HOST_DATA_DIR}:/var/lib/postgresql/data
+    # Environment variables
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_ADMIN_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_ADMIN_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      PGPORT: ${PGPORT}
+      PGDATA: /var/lib/postgresql/data
+    # Loggin settings
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "8m"
+        max-file: 4
+        compress: "true"
+    restart: always
+    # Check status of service
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "$POSTGRES_DB"]
+      retries: 12
+      interval: 5s
+      timeout: 5s
+  ## MQTTX Webui
+  mqttx-webui:
+    image: emqx/mqttx-web:v1.12.0-beta.2
+    container_name: mqttx-webui
+    # Network
+    networks:
+      - emqx_network
+    # Ports
+    ports:
+      - "8088:80"       # Web UI
+    # Loggin settings
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "8m"
+        max-file: 4
+        compress: "true"
+    # Dependencies
+    depends_on:
+      emqx-broker:
+        condition: service_healthy
+    restart: always
+
+
+# Volumes
+volumes:
+  emqx_data:
+    name: emqx_data
+    driver: local
+  # emqx_pg_data:
+  #   name: emqx_pg_data
+  #   driver: local
+
+# Networks
+networks:
+  emqx_network:
+    name: emqx_network
+    driver: bridge
