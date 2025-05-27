@@ -10,7 +10,7 @@ done
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
 
 -- Create sensor data table
-CREATE TABLE dispensers_log (
+CREATE TABLE units_status (
   time              TIMESTAMPTZ      NOT NULL,
   topic             TEXT             NOT NULL,
   qos               SMALLINT,
@@ -26,14 +26,10 @@ CREATE TABLE dispensers_log (
   station_id        TEXT
 );
 
-
--- Create INDEX
-CREATE INDEX idx_time ON dispensers_log(time);
-
 -- Create time-based partitioning policy
 -- Partitioning the data into four equally sized time ranges allows 
 -- for easier querying within specific time ranges and provides improved performance and scalability as the data grows.
-SELECT create_hypertable('dispensers_log', 'time');
+SELECT create_hypertable('units_status', 'time');
 
 
 -- Create the event table to register the client events
@@ -51,7 +47,7 @@ SELECT create_hypertable('emqx_client_events', 'time');
 
 
 -- Grant permissions to the admin user
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE dispensers_log TO $POSTGRES_ADMIN_USER;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE units_status TO $POSTGRES_ADMIN_USER;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE emqx_client_events TO $POSTGRES_ADMIN_USER;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO $POSTGRES_ADMIN_USER;
 
