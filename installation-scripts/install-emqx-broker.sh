@@ -23,9 +23,6 @@ install_emqx_broker() {
     # Run MQTTX webui container from docker compose
     ${DOCKER_COMPOSE_COMMAND} --file docker/${DOCKER_COMPOSE_FILE} up \
         --detach mqttx-webui
-    # Run MQTTX cli container from docker compose
-    ${DOCKER_COMPOSE_COMMAND} --file docker/${DOCKER_COMPOSE_FILE} up \
-        --detach mqttx-cli
 }
 
 
@@ -64,9 +61,6 @@ stop_containers() {
     ${DOCKER_COMPOSE_COMMAND} --file docker/${DOCKER_COMPOSE_FILE} stop mqttx-webui
     ${DOCKER_COMPOSE_COMMAND} --file docker/${DOCKER_COMPOSE_FILE} rm --force mqttx-webui
 
-    # Stop and remove the MQTTX cli container
-    ${DOCKER_COMPOSE_COMMAND} --file docker/${DOCKER_COMPOSE_FILE} stop mqttx-cli
-    ${DOCKER_COMPOSE_COMMAND} --file docker/${DOCKER_COMPOSE_FILE} rm --force mqttx-cli
 }
 
 # Verify if the Docker engine is installed on the system
