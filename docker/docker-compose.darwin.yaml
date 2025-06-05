@@ -1,6 +1,6 @@
 name: 'emqx-mqtt-stack'
 services:
-  ## MQTT Broker
+  ## MQTT Broker (EMQX v5.9.0)
   emqx-broker:
     image: ${REGISTRY_NAME}/${EMQX_CONTAINER_NAME}:${EMQX_CONTAINER_TAG}
     container_name: ${EMQX_CONTAINER_NAME}
@@ -41,7 +41,7 @@ services:
       postgresql-broker:
         condition: service_healthy
     restart: always
-  ## Postgresql
+  ## Postgresql with TimescaleDB (pg15.13-ts2.20.0)
   postgresql-broker:
     image: ${REGISTRY_NAME}/${POSTGRES_CONTAINER_NAME}:${POSTGRES_CONTAINER_TAG}
     container_name: ${POSTGRES_CONTAINER_NAME}
@@ -77,7 +77,7 @@ services:
       retries: 12
       interval: 5s
       timeout: 5s
-  ## MQTTX Webui
+  ## MQTTX Webui (v1.12.0-beta.2)
   mqttx-webui:
     image: emqx/mqttx-web:v1.12.0-beta.2
     container_name: mqttx-webui
@@ -106,9 +106,6 @@ volumes:
   emqx_data:
     name: emqx_data
     driver: local
-  # emqx_pg_data:
-  #   name: emqx_pg_data
-  #   driver: local
 
 # Networks
 networks:
