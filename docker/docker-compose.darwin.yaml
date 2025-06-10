@@ -23,6 +23,7 @@ services:
       EMQX_NODE__COOKIE: ${EMQX_NODE__COOKIE}
       EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD__DEFAULT_PASSWORD}
       EMQX_LOG__CONSOLE__LEVEL: ${EMQX_LOG__CONSOLE__LEVEL}
+      EMQX_DURABLE_SESSIONS__ENABLE: true
     # Loggin settings
     logging:
       driver: "json-file"
