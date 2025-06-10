@@ -49,7 +49,7 @@ create_units_status_action() {
                 "request_ttl": "45s"
             },
             "parameters": {
-                "sql": "INSERT INTO units_status (time, topic, qos, retain, dup, dispenser_id, session_id, energy_kwh, voltage_v, current_a, temperature_c, status, station_id) VALUES (TO_TIMESTAMP((${time} :: bigint)/1000), ${topic}, ${qos}, ${retain}, ${dup}, ${dispenser_id}, ${session_id}, ${energy_kwh}, ${voltage_v}, ${current_a}, ${temperature_c}, ${status}, ${station_id})"
+                "sql": "INSERT INTO units_status (timestamp, topic, qos, retain, dup, dispenser_id, session_id, energy_kwh, voltage_v, current_a, temperature_c, status, station_id) VALUES (TO_TIMESTAMP(${timestamp} :: bigint), ${topic}, ${qos}, ${retain}, ${dup}, ${dispenser_id}, ${session_id}, ${energy_kwh}, ${voltage_v}, ${current_a}, ${temperature_c}, ${status}, ${station_id})"
             },
             "description": "Insert MQTT command messages to PostgreSQL"
     }'

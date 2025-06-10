@@ -9,9 +9,9 @@ done
 # Create new users
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
 
--- Create sensor data table
+-- Create unit status data table
 CREATE TABLE units_status (
-  time              TIMESTAMPTZ      NOT NULL,
+  timestamp         TIMESTAMPTZ      NOT NULL,
   topic             TEXT             NOT NULL,
   qos               SMALLINT,
   retain            BOOLEAN,
@@ -23,30 +23,31 @@ CREATE TABLE units_status (
   current_a         DOUBLE PRECISION,
   temperature_c     DOUBLE PRECISION,
   status            TEXT,
-  station_id        TEXT
+  station_id        TEXT,
+  created_at        TIMESTAMPTZ      NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 );
 
 -- Create time-based partitioning policy
 -- Partitioning the data into four equally sized time ranges allows 
 -- for easier querying within specific time ranges and provides improved performance and scalability as the data grows.
-SELECT create_hypertable('units_status', 'time');
+SELECT create_hypertable('units_status', 'timestamp');
 
--- Set the chunk time interval to 30 days
-SELECT set_chunk_time_interval('units_status', INTERVAL '30 days');
+-- Set the chunk time interval to 7 days
+SELECT set_chunk_time_interval('units_status', INTERVAL '7 days');
 
 -- Set the compression policy for the units_status table
 ALTER TABLE units_status SET (
   timescaledb.compress,
-  timescaledb.compress_orderby = 'time DESC',
+  timescaledb.compress_orderby = 'timestamp DESC',
   timescaledb.compress_segmentby = 'dispenser_id'
 );
 
 -- Enable compression for the units_status table
-SELECT add_compression_policy('units_status', INTERVAL '60 days');
+SELECT add_compression_policy('units_status', INTERVAL '14 days');
 
 -- Set the retention policy for the units_status table
--- Retention policy will automatically drop chunks older than 120 days
-SELECT add_retention_policy('units_status', INTERVAL '120 days');
+-- Retention policy will automatically drop chunks older than 30 days
+SELECT add_retention_policy('units_status', INTERVAL '30 days');
 
 SELECT alter_job(
   job_id := (
@@ -67,7 +68,7 @@ SELECT alter_job(
 
 -- Create the event table to register the client events
 CREATE TABLE emqx_client_events (
-  time        TIMESTAMPTZ     NOT NULL DEFAULT now(),
+  time        TIMESTAMPTZ     NOT NULL,
   clientid    TEXT,
   event       TEXT
 );
@@ -78,8 +79,8 @@ CREATE TABLE emqx_client_events (
 SELECT create_hypertable('emqx_client_events', 'time');
 
 
--- Set the chunk time interval to 30 days
-SELECT set_chunk_time_interval('emqx_client_events', INTERVAL '30 days');
+-- Set the chunk time interval to 7 days
+SELECT set_chunk_time_interval('emqx_client_events', INTERVAL '7 days');
 
 -- Set the compression policy for the emqx_client_events table
 ALTER TABLE emqx_client_events SET (
@@ -89,11 +90,11 @@ ALTER TABLE emqx_client_events SET (
 );
 
 -- Enable compression for the emqx_client_events table
-SELECT add_compression_policy('emqx_client_events', INTERVAL '60 days');
+SELECT add_compression_policy('emqx_client_events', INTERVAL '14 days');
 
 -- Set the retention policy for the emqx_client_events table
--- Retention policy will automatically drop chunks older than 120 days
-SELECT add_retention_policy('emqx_client_events', INTERVAL '120 days');
+-- Retention policy will automatically drop chunks older than 30 days
+SELECT add_retention_policy('emqx_client_events', INTERVAL '30 days');
 
 SELECT alter_job(
   job_id := (
